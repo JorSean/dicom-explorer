@@ -16,6 +16,7 @@ CReadDcmFile::CReadDcmFile()
     : m_nMultiFrameCount(1)
     , m_pQPixmap(NULL)
     , m_pDcmFile(NULL)
+    , m_pAnnotationInfo(NULL)
 {
 }
 
@@ -31,6 +32,11 @@ CReadDcmFile::~CReadDcmFile()
         delete m_pDcmFile;
         m_pDcmFile = NULL;
     }
+    if (m_pAnnotationInfo!=NULL)
+    {
+        delete m_pAnnotationInfo;
+        m_pAnnotationInfo = NULL;
+    }
 }
 
 bool CReadDcmFile::ReadFile(const char* strFileName)
@@ -39,16 +45,25 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     {
         delete m_pDcmFile;
     }
+    if (m_pAnnotationInfo!=NULL)
+    {
+        delete m_pAnnotationInfo;
+        m_pAnnotationInfo = NULL;
+    }
     m_pDcmFile = new DcmFileFormat();
     OFCondition result = m_pDcmFile->loadFile(strFileName);
     if (result.bad())
     {
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
 
     DcmDataset* dataset = m_pDcmFile->getDataset();
     if (dataset == NULL)
     {
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
 
@@ -76,6 +91,8 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
         DcmRLEDecoderRegistration::cleanup();
         if (result.bad())
         {
+            delete m_pDcmFile;
+            m_pDcmFile = NULL;
             return false;
         }
     }
@@ -87,6 +104,8 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
         DJDecoderRegistration::cleanup();
         if (result.bad())
         {
+            delete m_pDcmFile;
+            m_pDcmFile = NULL;
             return false;
         }
     }
@@ -95,6 +114,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_SamplesPerPixel, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 samplesPerPixel(0);
@@ -103,6 +125,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_PhotometricInterpretation, element);
     if (result.bad() || element==NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     OFString photometricInterpretation;
@@ -111,15 +136,20 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_Columns, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 nColumns(0);
     element->getUint16(nColumns);
 
-
     result = dataset->findAndGetElement(DCM_Rows, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 nRows(0);
@@ -128,6 +158,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_BitsAllocated, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 nBitsAllocated(0);
@@ -136,6 +169,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_BitsStored, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 nBitsStored(0);
@@ -144,6 +180,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_HighBit, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
     Uint16 nHighBit(0);
@@ -151,10 +190,7 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
 
 
     result = dataset->findAndGetElement(DCM_PixelRepresentation, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         Uint16 nPixelRepresentation(0);
         element->getUint16(nPixelRepresentation);
@@ -162,19 +198,13 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
 
     Uint16 planarConfiguration(0);
     result = dataset->findAndGetElement(DCM_PlanarConfiguration, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16(planarConfiguration);
     }
 
     result = dataset->findAndGetElement(DCM_PixelAspectRatio, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         Uint16 nPixelAspectRatio(0);
         element->getUint16(nPixelAspectRatio);
@@ -182,41 +212,28 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
 
     Sint16 smallestImagePixelValue(0x7FFF);
     result = dataset->findAndGetElement(DCM_SmallestImagePixelValue, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getSint16(smallestImagePixelValue);
     }
 
     Sint16 largestImagePixelValue(0);
     result = dataset->findAndGetElement(DCM_LargestImagePixelValue, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getSint16(largestImagePixelValue);
     }
 
     Uint16 pixelRepresentation(0);
     result = dataset->findAndGetElement(DCM_PixelRepresentation, element);
-    if (result.bad() || element == NULL)
-    {
-
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16(pixelRepresentation);
     }
 
     unsigned short* pPaletteColorLUTDescrip = NULL;
     result = dataset->findAndGetElement(DCM_RedPaletteColorLookupTableDescriptor, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16Array(pPaletteColorLUTDescrip);
     }
@@ -224,26 +241,17 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
 
     unsigned short *pPaletteColorLUT_Red(NULL), *pPaletteColorLUT_Green(NULL), *pPaletteColorLUT_Blue(NULL);
     result = dataset->findAndGetElement(DCM_RedPaletteColorLookupTableData, element);
-    if (result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16Array(pPaletteColorLUT_Red);
     }
     result = dataset->findAndGetElement(DCM_GreenPaletteColorLookupTableData, element);
-    if (result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16Array(pPaletteColorLUT_Green);
     }
     result = dataset->findAndGetElement(DCM_BluePaletteColorLookupTableData, element);
-    if (result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getUint16Array(pPaletteColorLUT_Blue);
     }
@@ -253,20 +261,14 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     bool isRescaleIntercept(true);
     DcmSequenceOfItems *sequence = NULL;
     result = dataset->findAndGetSequence(DCM_ModalityLUTSequence, sequence);
-    if (result.bad() || sequence == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         isRescaleIntercept = false;
     }
 
     float rescaleIntercept(0.0);
     result = dataset->findAndGetElement(DCM_RescaleIntercept, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         OFString strValue("");
         element->getOFString(strValue, 0);
@@ -274,10 +276,7 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     }
     float rescaleSlope(1.0);
     result = dataset->findAndGetElement(DCM_RescaleSlope, element);
-    if(result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         OFString strValue("");
         element->getOFString(strValue, 0);
@@ -285,10 +284,7 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     }
     OFString rescaleType("");
     result = dataset->findAndGetElement(DCM_RescaleType, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         element->getOFString(rescaleType, 0);
     }
@@ -297,20 +293,14 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     //VOI LUT
     bool isVOILUTSeq(false);
     result = dataset->findAndGetSequence(DCM_VOILUTSequence, sequence);
-    if (result.bad() || sequence==NULL)
-    {
-    }
-    else
+    if (result.good() && sequence != NULL)
     {
         isVOILUTSeq = true;
     }
 
     float windowCenter(0.0);
     result = dataset->findAndGetElement(DCM_WindowCenter, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         isVOILUTSeq = false;
         OFString strValue("");
@@ -319,10 +309,7 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     }
     float windowWidth(0.0);
     result = dataset->findAndGetElement(DCM_WindowWidth, element);
-    if (result.bad() || element == NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         OFString strValue("");
         element->getOFString(strValue, 0);
@@ -331,27 +318,18 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     //End VOI LUT
 
     //Multi-frame Module. PS3.3 2017e, C.7.6.6, P470.
-    int numberOfFrames(1);
     result = dataset->findAndGetElement(DCM_NumberOfFrames, element);
-    if (result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         OFString strValue("");
         element->getOFString(strValue, 0);
-        numberOfFrames = atoi(strValue.c_str());
-        assert(numberOfFrames>0);
+        m_nMultiFrameCount = atoi(strValue.c_str());
+        assert(m_nMultiFrameCount>0);
     }
-
-    m_nMultiFrameCount = numberOfFrames;
 
     DcmTagKey frameIncrementPointer;
     result = dataset->findAndGetElement(DCM_FrameIncrementPointer, element);
-    if (result.bad() || element==NULL)
-    {
-    }
-    else
+    if (result.good() && element != NULL)
     {
         Uint16* tag = NULL;
         element->getUint16Array(tag);
@@ -364,6 +342,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     result = dataset->findAndGetElement(DCM_PixelData, element);
     if (result.bad() || element == NULL)
     {
+        assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
 
@@ -384,12 +365,16 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
     else
     {
         assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
 
-    if (pixLen != numberOfFrames * nColumns * nRows * samplesPerPixel * nBitsAllocated/8)
+    if (pixLen != m_nMultiFrameCount * nColumns * nRows * samplesPerPixel * nBitsAllocated/8)
     {
         assert(false);
+        delete m_pDcmFile;
+        m_pDcmFile = NULL;
         return false;
     }
 
@@ -398,9 +383,9 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
         delete [] m_pQPixmap;
         m_pQPixmap = NULL;
     }
-    m_pQPixmap = new QPixmap[numberOfFrames];
+    m_pQPixmap = new QPixmap[m_nMultiFrameCount];
 
-    for (int frame=0; frame<numberOfFrames; frame++)
+    for (int frame=0; frame<m_nMultiFrameCount; frame++)
     {
         int* pSrcIntValue = new int[nRows*nColumns];//Save int value of src
         memset(pSrcIntValue, 0, nRows*nColumns*sizeof(int));
@@ -590,6 +575,82 @@ bool CReadDcmFile::ReadFile(const char* strFileName)
         delete pPixDstData;
         pPixDstData = NULL;
     }//frame loop
+
+    ReadAnnotationInfo();
+    m_pAnnotationInfo->nWindowCenter = windowCenter<1? 128 : windowCenter;
+    m_pAnnotationInfo->nWindowWidth = windowWidth<1? 256 : windowWidth;
+
+    return true;
+}
+
+bool CReadDcmFile::ReadAnnotationInfo()
+{
+    if (m_pAnnotationInfo==NULL)
+    {
+        m_pAnnotationInfo=new stAnnotationInfo();
+    }
+
+    DcmElement* element = NULL;
+    DcmDataset* dataset = m_pDcmFile->getDataset();
+    OFCondition result = dataset->findAndGetElement(DCM_PatientName, element);
+    if (result.good() && element != NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strPatientName, 0);
+    }
+
+    result = dataset->findAndGetElement(DCM_PatientID, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strPatientID, 0);
+    }
+    result = dataset->findAndGetElement(DCM_PatientSex, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strPatientSex, 0);
+    }
+    result = dataset->findAndGetElement(DCM_StudyID, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strStudyID, 0);
+    }
+    result = dataset->findAndGetElement(DCM_SeriesNumber, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strSeriesNum, 0);
+    }
+    result = dataset->findAndGetElement(DCM_StudyDate, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strStudyDate, 0);
+    }
+    result = dataset->findAndGetElement(DCM_StudyTime, element);
+    if (result.good() && element!=NULL)
+    {
+        element->getOFString(m_pAnnotationInfo->strStudyTime, 0);
+    }
+    result = dataset->findAndGetElement(DCM_NumberOfFrames, element);
+    if (result.good() && element!=NULL)
+    {
+        string strFrameCount;
+        element->getOFString(strFrameCount, 0);
+        m_pAnnotationInfo->nFrameCount = atoi(strFrameCount.c_str());
+    }
+    result = dataset->findAndGetElement(DCM_WindowCenter, element);
+    if (result.good() && element!=NULL)
+    {
+        Sint32 nWC;
+        element->getSint32(nWC);
+        m_pAnnotationInfo->nWindowCenter = nWC;
+    }
+    result = dataset->findAndGetElement(DCM_WindowWidth, element);
+    if (result.good() && element!=NULL)
+    {
+        Sint32 nWW;
+        element->getSint32(nWW);
+        m_pAnnotationInfo->nWindowWidth = nWW;
+    }
+
+
 
     return true;
 }

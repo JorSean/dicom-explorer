@@ -15,7 +15,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_pReadDcmFile(NULL)
+    m_pReadDcmFile(NULL),
+    m_pTagsInfoTable(NULL)
 {
     ui->setupUi(this);
 
@@ -27,13 +28,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete ui;
-
     if (m_pReadDcmFile!= NULL)
     {
         delete m_pReadDcmFile;
         m_pReadDcmFile = NULL;
     }
+
+    if (m_pTagsInfoTable != NULL)
+    {
+        m_pTagsInfoTable->close();
+        delete m_pTagsInfoTable;
+        m_pTagsInfoTable = NULL;
+    }
+
+    ClearAnnotations();
+
+    delete ui;
 }
 
 void MainWindow::wheelEvent(QWheelEvent *evt)
@@ -52,10 +62,27 @@ void MainWindow::wheelEvent(QWheelEvent *evt)
 
     }
 }
-
+void MainWindow::closeEvent(QCloseEvent *)
+{
+    if (m_pTagsInfoTable != NULL)
+    {
+        m_pTagsInfoTable->close();
+        delete m_pTagsInfoTable;
+        m_pTagsInfoTable = NULL;
+    }
+}
 void MainWindow::on_OpenImg_pushButton_clicked()
 {
     ui->Image_label->clear();
+    ClearAnnotations();
+    if (m_pTagsInfoTable != NULL)
+    {
+        m_pTagsInfoTable->close();
+        delete m_pTagsInfoTable;
+        m_pTagsInfoTable = NULL;
+    }
+
+    ui->MultiFrame_verticalSlider->setMaximum(0);
     ui->MultiFrame_verticalSlider->setVisible(false);
     ui->MultiFrame_verticalSlider->setValue(0);
     this->setWindowTitle("");
@@ -92,10 +119,14 @@ void MainWindow::on_OpenImg_pushButton_clicked()
             ui->Image_label->setPixmap(*pixmap);
             ui->Image_label->setAlignment(Qt::AlignCenter);
             ui->Image_label->show();
+
+            ShowAnnotations();
         }
         else
         {
             QMessageBox::information(NULL, tr("Open file failed"), tr("Can't open file."));
+            delete m_pReadDcmFile;
+            m_pReadDcmFile = NULL;
         }
     }
 }
@@ -104,12 +135,13 @@ void MainWindow::on_MultiFrame_verticalSlider_valueChanged(int value)
 {
     int sliderPos = ui->MultiFrame_verticalSlider->value();
 
-    if (sliderPos<ui->MultiFrame_verticalSlider->maximum())
+    if (sliderPos<=ui->MultiFrame_verticalSlider->maximum())
     {
         QPixmap* pixmap = m_pReadDcmFile->GetPixmap(sliderPos);
         ui->Image_label->setPixmap(*pixmap);
         ui->Image_label->setAlignment(Qt::AlignCenter);
         ui->Image_label->show();
+        ShowAnnotations();
     }
 }
 
@@ -118,7 +150,7 @@ void MainWindow::on_actionDicomTags_triggered()
     char* strFileName = "XML.xml";
     if (m_pReadDcmFile==NULL)
     {
-        QMessageBox::information(this, tr("Info"), tr("No xml file opened!"));
+        QMessageBox::information(this, tr("Info"), tr("No DCM file opened!"));
         return;
     }
     bool ret = m_pReadDcmFile->WriteXML(strFileName);
@@ -131,19 +163,26 @@ void MainWindow::on_actionDicomTags_triggered()
     QFile file(strFileName);
     if (file.open(QIODevice::ReadOnly))
     {
-        QTableWidget *pInfoTable = new QTableWidget(0,6);
-        pInfoTable->setHorizontalHeaderLabels({"Tag", "VR", "VM", "Length", "Description", "Value"});
-        QHeaderView *pHeader = pInfoTable->verticalHeader();
+        if (m_pTagsInfoTable != NULL)
+        {
+            m_pTagsInfoTable->close();
+            delete m_pTagsInfoTable;
+            m_pTagsInfoTable = NULL;
+        }
+        m_pTagsInfoTable = new QTableWidget(0,6);
+        m_pTagsInfoTable->setHorizontalHeaderLabels({"Tag", "VR", "VM", "Length", "Description", "Value"});
+        QHeaderView *pHeader = m_pTagsInfoTable->verticalHeader();
         pHeader->setHidden(true);
-        pInfoTable->setGeometry(200, 100, 1000, 600);
-        pInfoTable->setWindowTitle(tr("DICOM tag information"));
-        pInfoTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-        pInfoTable->setColumnWidth(0, 150);
-        pInfoTable->setColumnWidth(1, 30);
-        pInfoTable->setColumnWidth(2, 30);
-        pInfoTable->setColumnWidth(3, 50);
-        pInfoTable->setColumnWidth(4, 300);
-        pInfoTable->setColumnWidth(5, 1200);
+        m_pTagsInfoTable->setGeometry(200, 100, 1000, 600);
+        m_pTagsInfoTable->setWindowTitle(tr("DICOM tag information"));
+        m_pTagsInfoTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+        m_pTagsInfoTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        m_pTagsInfoTable->setColumnWidth(0, 150);
+        m_pTagsInfoTable->setColumnWidth(1, 30);
+        m_pTagsInfoTable->setColumnWidth(2, 30);
+        m_pTagsInfoTable->setColumnWidth(3, 50);
+        m_pTagsInfoTable->setColumnWidth(4, 300);
+        m_pTagsInfoTable->setColumnWidth(5, 1200);
         int rowIndex = 0;
 
         QXmlStreamReader readStream(&file);
@@ -164,20 +203,20 @@ void MainWindow::on_actionDicomTags_triggered()
                  QString name = readStream.attributes().value("name").toString();
                  QString text = readStream.readElementText();
 
-                 pInfoTable->insertRow(rowIndex);
-                 pInfoTable->setItem(rowIndex,0,new QTableWidgetItem(tag));
-                 pInfoTable->setItem(rowIndex,1,new QTableWidgetItem(vr));
-                 pInfoTable->setItem(rowIndex,2,new QTableWidgetItem(vm));
-                 pInfoTable->setItem(rowIndex,3,new QTableWidgetItem(len));
-                 pInfoTable->setItem(rowIndex,4,new QTableWidgetItem(name));
-                 pInfoTable->setItem(rowIndex,5,new QTableWidgetItem(text));
+                 m_pTagsInfoTable->insertRow(rowIndex);
+                 m_pTagsInfoTable->setItem(rowIndex,0,new QTableWidgetItem(tag));
+                 m_pTagsInfoTable->setItem(rowIndex,1,new QTableWidgetItem(vr));
+                 m_pTagsInfoTable->setItem(rowIndex,2,new QTableWidgetItem(vm));
+                 m_pTagsInfoTable->setItem(rowIndex,3,new QTableWidgetItem(len));
+                 m_pTagsInfoTable->setItem(rowIndex,4,new QTableWidgetItem(name));
+                 m_pTagsInfoTable->setItem(rowIndex,5,new QTableWidgetItem(text));
                  rowIndex++;
             }
         }
 
         file.close();
 
-        pInfoTable->show();
+        m_pTagsInfoTable->show();
     }
     else
     {
@@ -185,4 +224,97 @@ void MainWindow::on_actionDicomTags_triggered()
     }
 }
 
+void MainWindow::ShowAnnotations()
+{
+    ClearAnnotations();
+    if (m_pReadDcmFile==NULL)
+    {
+        return;
+    }
+    stAnnotationInfo* pInfo = m_pReadDcmFile->GetAnnotationInfo();
+    if (pInfo==NULL)
+    {
+        return;
+    }
+    int labelHeight(30), labelWidth(500);
+    int labelMargin(25);//控件与边界的间距
+    QFont ft;
+    ft.setPixelSize(25);
+    ft.setBold(false);
+    ft.setFamily("仿宋");
+    QPalette yellowPa;
+    yellowPa.setColor(QPalette::WindowText, QColor::fromRgb(200,200,30));
 
+    QLabel* pNameLabel = new QLabel(pInfo->strPatientName.c_str(), ui->Image_label);
+    pNameLabel->setAlignment(Qt::AlignRight);
+    pNameLabel->setFont(ft);
+    pNameLabel->setPalette(yellowPa);
+    pNameLabel->setGeometry(ui->Image_label->geometry().right()-labelWidth-labelMargin, labelMargin, labelWidth, labelHeight);
+    pNameLabel->show();
+
+    QLabel* pPIDLabel = new QLabel(pInfo->strPatientID.c_str(), ui->Image_label);
+    pPIDLabel->setAlignment(Qt::AlignRight);
+    pPIDLabel->setFont(ft);
+    pPIDLabel->setPalette(yellowPa);
+    pPIDLabel->setGeometry(pNameLabel->geometry().left(), pNameLabel->geometry().bottom(), labelWidth, labelHeight);
+    pPIDLabel->show();
+
+    QLabel* pSexLabel = new QLabel(pInfo->strPatientSex.c_str(), ui->Image_label);
+    pSexLabel->setAlignment(Qt::AlignRight);
+    pSexLabel->setFont(ft);
+    pSexLabel->setPalette(yellowPa);
+    pSexLabel->setGeometry(pPIDLabel->geometry().left(), pPIDLabel->geometry().bottom(), labelWidth, labelHeight);
+    pSexLabel->show();
+
+    QLabel* pStudyIDLabel = new QLabel(pInfo->strStudyID.c_str(), ui->Image_label);
+    pStudyIDLabel->setAlignment(Qt::AlignRight);
+    pStudyIDLabel->setFont(ft);
+    pStudyIDLabel->setPalette(yellowPa);
+    pStudyIDLabel->setGeometry(pSexLabel->geometry().left(), pSexLabel->geometry().bottom(), labelWidth, labelHeight);
+    pStudyIDLabel->show();
+
+    QLabel* pStudyDateTimeLabel = new QLabel((pInfo->strStudyDate + " " + pInfo->strStudyTime).c_str(), ui->Image_label);
+    pStudyDateTimeLabel->setAlignment(Qt::AlignRight);
+    pStudyDateTimeLabel->setFont(ft);
+    pStudyDateTimeLabel->setPalette(yellowPa);
+    pStudyDateTimeLabel->setGeometry(ui->Image_label->geometry().right()-labelWidth-labelMargin, ui->Image_label->height() -labelHeight-labelMargin, labelWidth, labelHeight);
+    pStudyDateTimeLabel->show();
+
+    QString strFrameIndex = tr("Frame: ") + QString::number( ui->MultiFrame_verticalSlider->value()+1, 10) + tr("/")
+            + QString::number( m_pReadDcmFile->GetFrameCount(), 10);
+    QLabel* pFrameIndexLabel = new QLabel(strFrameIndex, ui->Image_label);
+    pFrameIndexLabel->setAlignment(Qt::AlignLeft);
+    pFrameIndexLabel->setFont(ft);
+    pFrameIndexLabel->setPalette(yellowPa);
+    pFrameIndexLabel->setGeometry(labelMargin, labelMargin, labelWidth, labelHeight);
+    pFrameIndexLabel->show();
+
+    QLabel* pSeriesLabel = new QLabel( tr("Series: ") + pInfo->strSeriesNum.c_str(), ui->Image_label);
+    pSeriesLabel->setAlignment(Qt::AlignLeft);
+    pSeriesLabel->setFont(ft);
+    pSeriesLabel->setPalette(yellowPa);
+    pSeriesLabel->setGeometry(labelMargin, pFrameIndexLabel->geometry().bottom(), labelWidth, labelHeight);
+    pSeriesLabel->show();
+
+    QString strWindow = tr("W:") + QString::number(pInfo->nWindowWidth, 10) + tr(" L:") + QString::number(pInfo->nWindowCenter, 10);
+    QLabel* pWindowLabel = new QLabel(strWindow, ui->Image_label);
+    pWindowLabel->setAlignment(Qt::AlignLeft);
+    pWindowLabel->setFont(ft);
+    pWindowLabel->setPalette(yellowPa);
+    pWindowLabel->setGeometry(labelMargin, ui->Image_label->geometry().bottom()-labelHeight-labelMargin, labelWidth, labelHeight);
+    pWindowLabel->show();
+}
+
+void MainWindow::ClearAnnotations()
+{
+    QObjectList pLabelList= ui->Image_label->children();
+    foreach (QObject* pLabel, pLabelList)
+    {
+        if (pLabel!=NULL)
+        {
+            reinterpret_cast<QLabel*>(pLabel)->clear();
+            delete pLabel;
+        }
+    }
+    pLabelList.clear();
+}
