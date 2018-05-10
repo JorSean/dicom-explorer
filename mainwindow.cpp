@@ -80,8 +80,12 @@ void MainWindow::on_OpenImg_pushButton_clicked()
         m_pTagsInfoTable->close();
         delete m_pTagsInfoTable;
         m_pTagsInfoTable = NULL;
+    }    
+    if(m_pReadDcmFile!=NULL)
+    {
+        delete m_pReadDcmFile;
+        m_pReadDcmFile = NULL;
     }
-
     ui->MultiFrame_verticalSlider->setMaximum(0);
     ui->MultiFrame_verticalSlider->setVisible(false);
     ui->MultiFrame_verticalSlider->setValue(0);
@@ -95,11 +99,6 @@ void MainWindow::on_OpenImg_pushButton_clicked()
     {
         this->setWindowTitle(fileName);
 
-        if(m_pReadDcmFile!=NULL)
-        {
-            delete m_pReadDcmFile;
-            m_pReadDcmFile = NULL;
-        }
         m_pReadDcmFile = new CReadDcmFile();
         bool ret = m_pReadDcmFile->ReadFile(fileName.toLatin1().data());
         if (ret)
@@ -135,7 +134,7 @@ void MainWindow::on_MultiFrame_verticalSlider_valueChanged(int value)
 {
     int sliderPos = ui->MultiFrame_verticalSlider->value();
 
-    if (sliderPos<=ui->MultiFrame_verticalSlider->maximum())
+    if (sliderPos<=ui->MultiFrame_verticalSlider->maximum() && m_pReadDcmFile!=NULL)
     {
         QPixmap* pixmap = m_pReadDcmFile->GetPixmap(sliderPos);
         ui->Image_label->setPixmap(*pixmap);
