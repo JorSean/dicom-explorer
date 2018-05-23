@@ -28,11 +28,12 @@ private slots:
     void on_MultiFrame_verticalSlider_valueChanged(int value);
 
     void on_actionDicomTags_triggered();
+    void on_Close_pushButton_clicked();
 
 private:
     void ShowAnnotations();
     void ClearAnnotations();
-
+    void CloseImg();
 
 private:
     Ui::MainWindow *ui;

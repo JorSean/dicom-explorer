@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->MultiFrame_verticalSlider->setMaximum(0);
     QObject::connect(ui->actionOpen, SIGNAL(triggered(bool)), this, SLOT(on_OpenImg_pushButton_clicked()));
+    QObject::connect(ui->actionClose, SIGNAL(triggered(bool)), this, SLOT(on_Close_pushButton_clicked()));
 
     this->setStyleSheet("background-color:gray;");
 }
@@ -73,23 +74,8 @@ void MainWindow::closeEvent(QCloseEvent *)
 }
 void MainWindow::on_OpenImg_pushButton_clicked()
 {
-    ui->Image_label->clear();
-    ClearAnnotations();
-    if (m_pTagsInfoTable != NULL)
-    {
-        m_pTagsInfoTable->close();
-        delete m_pTagsInfoTable;
-        m_pTagsInfoTable = NULL;
-    }    
-    if(m_pReadDcmFile!=NULL)
-    {
-        delete m_pReadDcmFile;
-        m_pReadDcmFile = NULL;
-    }
-    ui->MultiFrame_verticalSlider->setMaximum(0);
-    ui->MultiFrame_verticalSlider->setVisible(false);
-    ui->MultiFrame_verticalSlider->setValue(0);
-    this->setWindowTitle("");
+    CloseImg();
+
     QString fileName = QFileDialog::getOpenFileName(NULL, tr("select a dicom file"), tr("../../dicom-files"));
     if (fileName==NULL)
     {
@@ -128,6 +114,12 @@ void MainWindow::on_OpenImg_pushButton_clicked()
             m_pReadDcmFile = NULL;
         }
     }
+}
+
+
+void MainWindow::on_Close_pushButton_clicked()
+{
+    CloseImg();
 }
 
 void MainWindow::on_MultiFrame_verticalSlider_valueChanged(int value)
@@ -248,6 +240,7 @@ void MainWindow::ShowAnnotations()
     pNameLabel->setAlignment(Qt::AlignRight);
     pNameLabel->setFont(ft);
     pNameLabel->setPalette(yellowPa);
+    pNameLabel->setStyleSheet("background:transparent");
     pNameLabel->setGeometry(ui->Image_label->geometry().right()-labelWidth-labelMargin, labelMargin, labelWidth, labelHeight);
     pNameLabel->show();
 
@@ -255,6 +248,7 @@ void MainWindow::ShowAnnotations()
     pPIDLabel->setAlignment(Qt::AlignRight);
     pPIDLabel->setFont(ft);
     pPIDLabel->setPalette(yellowPa);
+    pPIDLabel->setStyleSheet("background:transparent");
     pPIDLabel->setGeometry(pNameLabel->geometry().left(), pNameLabel->geometry().bottom(), labelWidth, labelHeight);
     pPIDLabel->show();
 
@@ -262,6 +256,7 @@ void MainWindow::ShowAnnotations()
     pSexLabel->setAlignment(Qt::AlignRight);
     pSexLabel->setFont(ft);
     pSexLabel->setPalette(yellowPa);
+    pSexLabel->setStyleSheet("background:transparent");
     pSexLabel->setGeometry(pPIDLabel->geometry().left(), pPIDLabel->geometry().bottom(), labelWidth, labelHeight);
     pSexLabel->show();
 
@@ -269,6 +264,7 @@ void MainWindow::ShowAnnotations()
     pStudyIDLabel->setAlignment(Qt::AlignRight);
     pStudyIDLabel->setFont(ft);
     pStudyIDLabel->setPalette(yellowPa);
+    pStudyIDLabel->setStyleSheet("background:transparent");
     pStudyIDLabel->setGeometry(pSexLabel->geometry().left(), pSexLabel->geometry().bottom(), labelWidth, labelHeight);
     pStudyIDLabel->show();
 
@@ -276,6 +272,7 @@ void MainWindow::ShowAnnotations()
     pStudyDateTimeLabel->setAlignment(Qt::AlignRight);
     pStudyDateTimeLabel->setFont(ft);
     pStudyDateTimeLabel->setPalette(yellowPa);
+    pStudyDateTimeLabel->setStyleSheet("background:transparent");
     pStudyDateTimeLabel->setGeometry(ui->Image_label->geometry().right()-labelWidth-labelMargin, ui->Image_label->height() -labelHeight-labelMargin, labelWidth, labelHeight);
     pStudyDateTimeLabel->show();
 
@@ -285,6 +282,7 @@ void MainWindow::ShowAnnotations()
     pFrameIndexLabel->setAlignment(Qt::AlignLeft);
     pFrameIndexLabel->setFont(ft);
     pFrameIndexLabel->setPalette(yellowPa);
+    pFrameIndexLabel->setStyleSheet("background:transparent");
     pFrameIndexLabel->setGeometry(labelMargin, labelMargin, labelWidth, labelHeight);
     pFrameIndexLabel->show();
 
@@ -292,6 +290,7 @@ void MainWindow::ShowAnnotations()
     pSeriesLabel->setAlignment(Qt::AlignLeft);
     pSeriesLabel->setFont(ft);
     pSeriesLabel->setPalette(yellowPa);
+    pSeriesLabel->setStyleSheet("background:transparent");
     pSeriesLabel->setGeometry(labelMargin, pFrameIndexLabel->geometry().bottom(), labelWidth, labelHeight);
     pSeriesLabel->show();
 
@@ -300,6 +299,7 @@ void MainWindow::ShowAnnotations()
     pWindowLabel->setAlignment(Qt::AlignLeft);
     pWindowLabel->setFont(ft);
     pWindowLabel->setPalette(yellowPa);
+    pWindowLabel->setStyleSheet("background:transparent");
     pWindowLabel->setGeometry(labelMargin, ui->Image_label->geometry().bottom()-labelHeight-labelMargin, labelWidth, labelHeight);
     pWindowLabel->show();
 }
@@ -316,4 +316,25 @@ void MainWindow::ClearAnnotations()
         }
     }
     pLabelList.clear();
+}
+
+void MainWindow::CloseImg()
+{
+    ui->Image_label->clear();
+    ClearAnnotations();
+    if (m_pTagsInfoTable != NULL)
+    {
+        m_pTagsInfoTable->close();
+        delete m_pTagsInfoTable;
+        m_pTagsInfoTable = NULL;
+    }
+    if(m_pReadDcmFile!=NULL)
+    {
+        delete m_pReadDcmFile;
+        m_pReadDcmFile = NULL;
+    }
+    ui->MultiFrame_verticalSlider->setMaximum(0);
+    ui->MultiFrame_verticalSlider->setVisible(false);
+    ui->MultiFrame_verticalSlider->setValue(0);
+    this->setWindowTitle("");
 }
