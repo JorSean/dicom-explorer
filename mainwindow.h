@@ -35,6 +35,7 @@ private:
     void ShowAnnotations();
     void ClearAnnotations();
     void CloseImg();
+    void InitToolBar();
 
 private:
     Ui::MainWindow *ui;

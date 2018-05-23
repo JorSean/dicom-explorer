@@ -20,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    InitToolBar();
+
     ui->MultiFrame_verticalSlider->setMaximum(0);
     QObject::connect(ui->actionOpen, SIGNAL(triggered(bool)), this, SLOT(on_OpenImg_pushButton_clicked()));
     QObject::connect(ui->actionClose, SIGNAL(triggered(bool)), this, SLOT(on_Close_pushButton_clicked()));
@@ -48,6 +50,15 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::InitToolBar()
+{
+    ui->mainToolBar->addAction(ui->actionOpen);
+    ui->mainToolBar->addAction(ui->actionClose);
+    ui->mainToolBar->addSeparator();
+    ui->mainToolBar->addAction(ui->actionDicomTags);
+    ui->mainToolBar->addSeparator();
+    ui->mainToolBar->addAction(ui->actionAbout);
+}
 void MainWindow::wheelEvent(QWheelEvent *evt)
 {
     if (ui->MultiFrame_verticalSlider->maximum()>1)
@@ -116,7 +127,6 @@ void MainWindow::on_OpenImg_pushButton_clicked()
         }
     }
 }
-
 
 void MainWindow::on_Close_pushButton_clicked()
 {

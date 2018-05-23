@@ -144,3 +144,8 @@ unix:!macx: LIBS += -lz
 win32: LIBS += -L'C:/Program Files/Microsoft SDKs/Windows/v6.0A/Lib/' -lIPHlpApi
 
 win32: LIBS += -lAdvAPI32
+
+DISTFILES +=
+
+RESOURCES += \
+    icon.qrc

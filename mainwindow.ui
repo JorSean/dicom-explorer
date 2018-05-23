@@ -119,6 +119,12 @@
    <property name="windowTitle">
     <string>Dicom Explorer</string>
    </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -128,30 +134,63 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/res/open-file.ico</normaloff>:/res/open-file.ico</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
+   <property name="iconText">
+    <string>Open</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionClose">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/res/file-close.ico</normaloff>:/res/file-close.ico</iconset>
+   </property>
    <property name="text">
     <string>Close</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionDicomTags">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/res/dicom-info.ico</normaloff>:/res/dicom-info.ico</iconset>
+   </property>
    <property name="text">
     <string>DICOM Tags</string>
    </property>
    <property name="toolTip">
     <string>DICOM Tags</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="icon.qrc">
+     <normaloff>:/res/help.ico</normaloff>:/res/help.ico</iconset>
+   </property>
    <property name="text">
     <string>About</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="icon.qrc"/>
+ </resources>
  <connections/>
 </ui>
