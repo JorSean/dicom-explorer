@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->MultiFrame_verticalSlider->setMaximum(0);
     QObject::connect(ui->actionOpen, SIGNAL(triggered(bool)), this, SLOT(on_OpenImg_pushButton_clicked()));
     QObject::connect(ui->actionClose, SIGNAL(triggered(bool)), this, SLOT(on_Close_pushButton_clicked()));
+    QObject::connect(ui->actionAbout, SIGNAL(triggered(bool)), this, SLOT(on_About_pushButton_clicked()));
 
     this->setStyleSheet("background-color:gray;");
 }
@@ -337,4 +338,23 @@ void MainWindow::CloseImg()
     ui->MultiFrame_verticalSlider->setVisible(false);
     ui->MultiFrame_verticalSlider->setValue(0);
     this->setWindowTitle("");
+}
+
+void MainWindow::on_About_pushButton_clicked()
+{
+    QDialog* pAboutWgt = new QDialog(this);
+    pAboutWgt->setFixedSize(360, 200);
+    pAboutWgt->setWindowTitle(tr("About"));
+
+    QVBoxLayout* pLayout = new QVBoxLayout();
+    pAboutWgt->setLayout(pLayout);
+    QLabel* pLable = new QLabel();
+    pLable->setText(("Version: 1.0.0\n\n"
+                     "QQ: 547609650 \n"
+                     "e-mail: qiaoxin686@163.com\n"
+                     "欢迎DICOM开发的同仁们沟通交流.\n\n"
+                     "个人原创,未经许可严禁用于一切商业行为."));
+    pLayout->addWidget(pLable);
+
+    pAboutWgt->exec();
 }

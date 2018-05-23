@@ -29,6 +29,7 @@ private slots:
 
     void on_actionDicomTags_triggered();
     void on_Close_pushButton_clicked();
+    void on_About_pushButton_clicked();
 
 private:
     void ShowAnnotations();
