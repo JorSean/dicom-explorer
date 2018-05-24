@@ -352,6 +352,11 @@ void MainWindow::CloseImg()
 
 void MainWindow::on_About_pushButton_clicked()
 {
+    QFont ft;
+    ft.setPixelSize(15);
+    ft.setBold(false);
+    ft.setFamily("仿宋");
+
     QDialog* pAboutWgt = new QDialog(this);
     pAboutWgt->setFixedSize(360, 200);
     pAboutWgt->setWindowTitle(tr("About"));
@@ -359,6 +364,7 @@ void MainWindow::on_About_pushButton_clicked()
     QVBoxLayout* pLayout = new QVBoxLayout();
     pAboutWgt->setLayout(pLayout);
     QLabel* pLable = new QLabel();
+    pLable->setFont(ft);
     pLable->setText(("Version: 1.0.0\n\n"
                      "QQ: 547609650 \n"
                      "e-mail: qiaoxin686@163.com\n"
