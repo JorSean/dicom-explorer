@@ -149,7 +149,7 @@ void MainWindow::on_MultiFrame_verticalSlider_valueChanged(int value)
 
 void MainWindow::on_actionDicomTags_triggered()
 {
-    char* strFileName = "XML.xml";
+    const char* strFileName = "XML.xml";
     if (m_pReadDcmFile==NULL)
     {
         QMessageBox::information(this, tr("Info"), tr("No DCM file opened!"));
