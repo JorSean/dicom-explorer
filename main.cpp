@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -7,6 +8,11 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.setWindowFlags(w.windowFlags() & ~Qt::WindowMaximizeButtonHint);
     w.showMaximized();
+
+    if(argc>1 && argv[1]!=NULL)
+    {
+        w.SetFileName(argv[1]);
+    }
 
     w.show();
 

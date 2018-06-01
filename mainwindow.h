@@ -19,6 +19,7 @@ public:
     ~MainWindow();
 
     void wheelEvent(QWheelEvent* evt);
+    void SetFileName(const char* fileName);
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
@@ -32,6 +33,7 @@ private slots:
     void on_About_pushButton_clicked();
 
 private:
+    void OpenImg();
     void ShowAnnotations();
     void ClearAnnotations();
     void CloseImg();
@@ -42,6 +44,8 @@ private:
 
     CReadDcmFile* m_pReadDcmFile;
     QTableWidget *m_pTagsInfoTable;
+    QString m_strFileName;
 };
+
 
 #endif // MAINWINDOW_H

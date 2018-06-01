@@ -12,6 +12,7 @@
 #include <QHeaderView>
 
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -48,6 +49,18 @@ MainWindow::~MainWindow()
     ClearAnnotations();
 
     delete ui;
+}
+
+void MainWindow::SetFileName(const char* fileName)
+{
+    m_strFileName = fileName;
+
+    if(m_strFileName.isNull() || m_strFileName.isEmpty())
+    {
+        return;
+    }
+
+    OpenImg();
 }
 
 void MainWindow::InitToolBar()
@@ -88,46 +101,52 @@ void MainWindow::on_OpenImg_pushButton_clicked()
 {
     CloseImg();
 
-    QString fileName = QFileDialog::getOpenFileName(NULL, tr("select a dicom file"), tr("../../dicom-files"));
-    if (fileName==NULL)
+    m_strFileName = QFileDialog::getOpenFileName(NULL, tr("select a dicom file"), tr("../../dicom-files"));
+    if (m_strFileName==NULL)
     {
         QMessageBox::information(NULL, "Find file error", "File name is empty");
     }
     else
     {
-        this->setWindowTitle(fileName);
-
-        m_pReadDcmFile = new CReadDcmFile();
-        bool ret = m_pReadDcmFile->ReadFile(fileName.toLatin1().data());
-        if (ret)
-        {
-            unsigned short frameCount = m_pReadDcmFile->GetFrameCount();
-            if (frameCount>1)
-            {
-                ui->MultiFrame_verticalSlider->setVisible(true);
-                ui->MultiFrame_verticalSlider->setRange(0, frameCount-1);
-            }
-            else
-            {
-                ui->MultiFrame_verticalSlider->setVisible(false);
-            }
-
-            QPixmap* pixmap = m_pReadDcmFile->GetPixmap(0);
-            ui->Image_label->setPixmap(*pixmap);
-            ui->Image_label->setAlignment(Qt::AlignCenter);
-            ui->Image_label->show();
-
-            ShowAnnotations();
-        }
-        else
-        {
-            QMessageBox::information(NULL, tr("Open file failed"), tr("Can't open file."));
-            delete m_pReadDcmFile;
-            m_pReadDcmFile = NULL;
-        }
+        OpenImg();
     }
 }
 
+void MainWindow::OpenImg()
+{
+    this->setWindowTitle(m_strFileName);
+
+    m_pReadDcmFile = new CReadDcmFile();
+    bool ret = m_pReadDcmFile->ReadFile(m_strFileName.toLatin1().data());
+    if (ret)
+    {
+        unsigned short frameCount = m_pReadDcmFile->GetFrameCount();
+        if (frameCount>1)
+        {
+            ui->MultiFrame_verticalSlider->setVisible(true);
+            ui->MultiFrame_verticalSlider->setRange(0, frameCount-1);
+        }
+        else
+        {
+            ui->MultiFrame_verticalSlider->setVisible(false);
+        }
+
+        QPixmap* pixmap = m_pReadDcmFile->GetPixmap(0);
+        ui->Image_label->setPixmap(*pixmap);
+        ui->Image_label->setAlignment(Qt::AlignCenter);
+        ui->Image_label->show();
+
+        ShowAnnotations();
+    }
+    else
+    {
+        m_strFileName.clear();
+        QMessageBox::information(NULL, tr("Open file failed"), tr("Can't open file."));
+        delete m_pReadDcmFile;
+        m_pReadDcmFile = NULL;
+    }
+
+}
 void MainWindow::on_Close_pushButton_clicked()
 {
     CloseImg();
@@ -348,6 +367,7 @@ void MainWindow::CloseImg()
     ui->MultiFrame_verticalSlider->setVisible(false);
     ui->MultiFrame_verticalSlider->setValue(0);
     this->setWindowTitle("");
+    m_strFileName.clear();
 }
 
 void MainWindow::on_About_pushButton_clicked()
