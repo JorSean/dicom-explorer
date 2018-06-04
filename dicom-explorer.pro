@@ -146,3 +146,5 @@ win32: LIBS += -lAdvAPI32
 
 RESOURCES += \
     icon.qrc
+
+RC_ICONS = res/dicom-explorer-32.ico

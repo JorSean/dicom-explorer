@@ -4,5 +4,7 @@
         <file>res/file-close.ico</file>
         <file>res/dicom-info.ico</file>
         <file>res/help.ico</file>
+        <file>res/dicom-explorer-16.ico</file>
+        <file>res/dicom-explorer-32.ico</file>
     </qresource>
 </RCC>

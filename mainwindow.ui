@@ -28,6 +28,10 @@
   <property name="contextMenuPolicy">
    <enum>Qt::NoContextMenu</enum>
   </property>
+  <property name="windowIcon">
+   <iconset resource="icon.qrc">
+    <normaloff>:/res/dicom-explorer-32.ico</normaloff>:/res/dicom-explorer-32.ico</iconset>
+  </property>
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
